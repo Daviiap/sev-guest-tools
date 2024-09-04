@@ -6,14 +6,13 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"unsafe"
 
 	snp "sev-guest/src/snp"
 )
 
-func GetReport(data [64]byte) ([]byte, error) {
+func GetReport(data [64]byte, vmpl uint32) ([]byte, error) {
 	var req snp.ReportReq
 	var resp snp.ReportResp
 	var guestReq snp.GuestRequestIOCtl
@@ -21,6 +20,7 @@ func GetReport(data [64]byte) ([]byte, error) {
 
 	req.UserData = data
 
+	req.VMPL = vmpl
 	guestReq.MSGVersion = 0x01
 	guestReq.ReqData = uint64(uintptr(unsafe.Pointer(&req)))
 	guestReq.RespData = uint64(uintptr(unsafe.Pointer(&resp)))
@@ -63,6 +63,7 @@ func WriteAttestationReport(report *[]byte, fileName string) error {
 type GetReportOptions struct {
 	Filename     string
 	DataFileName string
+	VMPL         int
 }
 
 func GetReportCommand(options GetReportOptions) {
@@ -74,10 +75,28 @@ func GetReportCommand(options GetReportOptions) {
 		data = sha512.Sum512(fileData)
 	}
 
-	reportBin, err := GetReport(data)
+	reportBin, err := GetReport(data, uint32(options.VMPL))
 
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
+	}
+
+	WriteAttestationReport(&reportBin, options.Filename)
+}
+
+func GetExtendedReportCommand(options GetReportOptions) {
+	fileData, _ := os.ReadFile(options.DataFileName)
+
+	data := [64]byte{}
+
+	if len(fileData) > 0 {
+		data = sha512.Sum512(fileData)
+	}
+
+	reportBin, err := GetReport(data, uint32(options.VMPL))
+
+	if err != nil {
+		panic(err)
 	}
 
 	WriteAttestationReport(&reportBin, options.Filename)

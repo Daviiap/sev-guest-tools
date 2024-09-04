@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"sev-guest/src/commands"
+	"strconv"
 )
 
 func printUsage() {
@@ -21,6 +21,7 @@ func printUsage() {
 type commandsOpts struct {
 	PrintUsage        bool
 	GetReport         bool
+	GetExtendedReport bool
 	GetReportOptions  commands.GetReportOptions
 	ReadReport        bool
 	ReadReportOptions commands.ReadReportOptions
@@ -44,13 +45,28 @@ func parseOptions(cmdOpts *commandsOpts) {
 			if isValidIndex(i+1, len(args)) {
 				cmdOpts.GetReportOptions.DataFileName = args[i+1]
 			}
+		case "--vmpl":
+			if isValidIndex(i+1, len(args)) {
+				vmpl, err := strconv.Atoi(args[i+1])
+				if err != nil {
+					panic(err)
+				}
+				cmdOpts.GetReportOptions.VMPL = vmpl
+			}
+		case "--get_extended_report":
+			cmdOpts.GetExtendedReport = true
+			cmdOpts.GetReportOptions.Filename = "report.bin"
+
+			if isValidIndex(i+1, len(args)) {
+				cmdOpts.GetReportOptions.DataFileName = args[i+1]
+			}
 		case "--read_report":
 			cmdOpts.ReadReport = true
 
 			if isValidIndex(i+1, len(args)) {
 				cmdOpts.ReadReportOptions.Filename = args[i+1]
 			} else {
-				log.Fatal("Invalid argument")
+				panic("Invalid argument")
 			}
 		case "--help":
 			cmdOpts.PrintUsage = true
@@ -68,6 +84,8 @@ func main() {
 		printUsage()
 	} else if cmds.GetReport {
 		commands.GetReportCommand(cmds.GetReportOptions)
+	} else if cmds.GetExtendedReport {
+		commands.GetExtendedReportCommand(cmds.GetReportOptions)
 	} else if cmds.ReadReport {
 		commands.ReadReportCommand(cmds.ReadReportOptions)
 	}

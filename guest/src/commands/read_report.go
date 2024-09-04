@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"log"
 	"os"
 	"sev-guest/src/snp"
 )
@@ -84,6 +83,8 @@ func PrintAttestationReport(report *snp.AttestationReport) {
 	fmt.Println(report.PlatformVersion.TEE)
 	fmt.Print("PlatformInfo: ")
 	fmt.Println(report.PlatformInfo)
+	fmt.Print("Flags: ")
+	fmt.Println(report.Flags)
 	fmt.Print("AuthorKeyDigest: ")
 	fmt.Println(PrintByteArray((report.AuthorKeyDigest[:])))
 	fmt.Print("ReportData: ")
@@ -152,7 +153,7 @@ func ReadReportCommand(options ReadReportOptions) {
 	err := ReadReport(options.Filename, &report)
 
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
 	PrintAttestationReport(&report)
